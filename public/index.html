@@ -106,10 +106,74 @@ iframe{border:0;width:100%;flex:1;background:#fff}
   .bar{flex-wrap:wrap}
   .devices{display:none}
 }
+
+/* Hostinger-inspired workspace dashboard */
+body{background:#f5f6f8;color:#1d1e20;overflow:auto}
+.dashboard{min-height:100vh;background:#f5f6f8;color:#1d1e20;font-family:Inter,'Space Grotesk',sans-serif}
+.dash-top{height:68px;background:#fff;border-bottom:1px solid #e8e9ec;display:flex;align-items:center;justify-content:space-between;padding:0 30px;position:sticky;top:0;z-index:20}
+.dash-brand{display:flex;align-items:center;gap:10px;font-size:20px;letter-spacing:-.6px}.dash-mark{width:32px;height:32px;background:#673de6;color:#fff;border-radius:9px;display:grid;place-items:center;font-weight:800}.dash-plan{font-size:9px;letter-spacing:1.1px;color:#777;margin-left:8px;border-left:1px solid #ddd;padding-left:14px;font-weight:700}
+.dash-top-right{display:flex;align-items:center;gap:22px}.dash-help{font-size:13px;color:#555}.dash-avatar{width:34px;height:34px;border-radius:50%;background:#e9e3ff;color:#5735c5;font-size:12px;font-weight:700}
+.dash-layout{display:grid;grid-template-columns:230px minmax(0,1fr);min-height:calc(100vh - 68px)}
+.dash-nav{background:#fff;border-right:1px solid #e8e9ec;padding:28px 16px;display:flex;flex-direction:column;gap:5px}
+.dash-nav-label{font-size:10px;font-weight:800;letter-spacing:1.2px;color:#96979b;padding:12px 12px 8px}.dash-nav-item{height:42px;border-radius:8px;text-align:left;padding:0 12px;display:flex;align-items:center;gap:12px;color:#515258;font-size:15px}.dash-nav-item span{font-size:13px;font-weight:600}.dash-nav-item small{margin-left:auto;background:#f0edf9;padding:2px 7px;border-radius:20px;color:#673de6}.dash-nav-item.active,.dash-nav-item:hover{background:#f1edff;color:#673de6}
+.dash-nav-bottom{margin-top:auto}.dash-support{margin:24px 3px 20px;padding:16px;background:#f7f5ff;border-radius:10px}.dash-support b{font-size:13px}.dash-support p{font-size:11px;line-height:1.5;color:#777;margin:7px 0 12px}.dash-support button,.dash-text-btn{font-size:12px;color:#673de6;font-weight:700}.dash-user{border-top:1px solid #eee;padding:18px 3px 0;display:flex;align-items:center;gap:10px}.dash-user b,.dash-user small{display:block;font-size:11px}.dash-user small{color:#888;margin-top:3px}.dash-user .dash-avatar{display:grid;place-items:center}.dash-more{margin-left:auto;color:#888}
+.dash-main{max-width:1400px;width:100%;margin:0 auto;padding:42px 48px 60px}.dash-welcome{display:flex;align-items:center;justify-content:space-between;gap:24px;margin-bottom:28px}.dash-eyebrow{font-size:10px;letter-spacing:1.5px;font-weight:800;color:#777}.dash-welcome h1{font-size:29px;letter-spacing:-1px;margin:9px 0 5px}.dash-welcome p,.dash-section-head p{font-size:13px;color:#777}.dash-primary{background:#673de6;color:#fff;padding:13px 19px;border-radius:8px;font-weight:700;font-size:13px;box-shadow:0 3px 7px #673de622}.dash-primary:hover{background:#5125d2}
+.dash-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:40px}.dash-stats article{background:#fff;border:1px solid #e9e9ed;border-radius:11px;padding:17px 19px;display:grid;grid-template-columns:38px 1fr;column-gap:12px;align-items:center}.dash-stat-icon{grid-row:span 2;width:36px;height:36px;border-radius:9px;background:#f2edff;color:#673de6;display:grid;place-items:center;font-size:18px}.dash-stats small{font-size:11px;color:#777}.dash-stats b{display:block;font-size:23px;margin-top:3px}.dash-stats em{grid-column:2;font-size:10px;color:#999;font-style:normal;margin-top:3px}
+.dash-section{margin-bottom:40px}.dash-section-head{display:flex;justify-content:space-between;align-items:end;margin-bottom:16px}.dash-section-head h2,.dash-create h2{font-size:19px;letter-spacing:-.4px;margin-bottom:5px}.dash-sites{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.dash-site-card,.dash-add-card{background:#fff;border:1px solid #e7e7eb;border-radius:11px;overflow:hidden;min-width:0}.dash-site-preview{height:165px;padding:18px 20px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:10px;color:#fff;overflow:hidden}.dash-site-preview span{font-size:9px;letter-spacing:2px;font-weight:800}.dash-site-preview b{font-family:Manrope,sans-serif;font-size:22px;line-height:1.1;letter-spacing:-.8px}.dash-site-preview i{font-size:8px;font-style:normal;border:1px solid #ffffff88;padding:6px 9px;margin-top:2px}.preview-fashion{background:linear-gradient(125deg,#261f31,#8b4e68 58%,#d6a18e)}.preview-studio{background:linear-gradient(125deg,#101c2d,#35566b 60%,#a0b5b5)}
+.dash-site-info{padding:14px 15px;display:flex;align-items:center;justify-content:space-between;gap:8px}.dash-site-info b,.dash-site-info small{display:block}.dash-site-info b{font-size:12px}.dash-site-info small{font-size:10px;color:#888;margin-top:4px}.dash-status{font-size:9px;white-space:nowrap}.published{color:#16865b}.draft{color:#ad7a12}.dash-site-actions{border-top:1px solid #eee;padding:10px 14px;display:flex;align-items:center;gap:14px}.dash-site-actions button{font-size:10px;color:#673de6;font-weight:700}.dash-site-actions button+button{color:#666}.dash-site-actions span{margin-left:auto;color:#888}.dash-add-card{min-height:270px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;border-style:dashed;color:#555}.dash-add-card>span{width:38px;height:38px;display:grid;place-items:center;border-radius:50%;background:#f1edff;color:#673de6;font-size:23px}.dash-add-card b{font-size:12px}.dash-add-card small{font-size:10px;color:#999}
+.dash-create{background:#eee9ff;border-radius:13px;padding:30px 36px;display:flex;align-items:center;justify-content:space-between;overflow:hidden;min-height:205px}.dash-create h2{font-size:23px;margin:10px 0}.dash-create p{font-size:12px;line-height:1.6;color:#686078;max-width:440px;margin-bottom:17px}.dash-create-art{width:240px;height:150px;position:relative;display:grid;place-items:center}.art-window{width:185px;height:126px;background:#fff;border-radius:9px;box-shadow:0 12px 30px #4930a522;transform:rotate(-5deg);overflow:hidden}.art-bar{height:17px;background:#f4f2f9;display:flex;gap:4px;align-items:center;padding-left:9px}.art-bar i{width:5px;height:5px;border-radius:50%;background:#c9c2d8}.art-content{padding:15px}.art-content>span{display:block;width:42px;height:5px;background:#dcd3ff;border-radius:4px;margin-bottom:10px}.art-content>b{display:block;width:90%;height:8px;background:#30264b;border-radius:4px;margin:5px 0}.art-content>b:nth-child(3){width:62%}.art-content>i{display:block;width:45px;height:12px;background:#673de6;border-radius:4px;margin-top:11px}.art-content div{display:flex;gap:5px;margin-top:12px}.art-content em{width:33%;height:18px;border-radius:4px;background:#eee9ff}.art-spark{position:absolute;right:18px;top:0;color:#673de6;font-size:35px}
+#app{display:none}.app{display:grid}
+@media(max-width:1000px){.dash-main{padding:30px 24px}.dash-sites{grid-template-columns:repeat(2,minmax(0,1fr))}.dash-add-card{min-height:240px}}
+@media(max-width:700px){.dash-layout{grid-template-columns:1fr}.dash-nav{display:none}.dash-top{padding:0 16px}.dash-plan,.dash-help{display:none}.dash-main{padding:26px 16px}.dash-welcome{align-items:flex-start;flex-direction:column}.dash-welcome h1{font-size:25px}.dash-stats{grid-template-columns:1fr;gap:9px;margin-bottom:30px}.dash-sites{grid-template-columns:1fr}.dash-add-card{min-height:150px}.dash-create{padding:24px;min-height:0}.dash-create-art{display:none}}
+
 </style>
 </head>
 <body>
-<div class="app">
+
+<div id="dashboard" class="dashboard">
+  <header class="dash-top">
+    <div class="dash-brand"><span class="dash-mark">S</span><b>SiteForge</b><span class="dash-plan">WEBSITE BUILDER</span></div>
+    <div class="dash-top-right"><span class="dash-help">⌕ &nbsp; Help centre</span><button class="dash-avatar">JS</button></div>
+  </header>
+  <div class="dash-layout">
+    <aside class="dash-nav">
+      <div class="dash-nav-label">WORKSPACE</div>
+      <button class="dash-nav-item active" data-dash="home">⌂ <span>Home</span></button>
+      <button class="dash-nav-item" data-dash="websites">▣ <span>Websites</span><small>2</small></button>
+      <button class="dash-nav-item" data-dash="domains">◎ <span>Domains</span></button>
+      <button class="dash-nav-item" data-dash="hosting">▤ <span>Hosting plans</span></button>
+      <div class="dash-nav-label">CREATE</div>
+      <button class="dash-nav-item" data-dash="builder">✦ <span>AI website builder</span></button>
+      <button class="dash-nav-item" data-dash="templates">▦ <span>Templates</span></button>
+      <div class="dash-nav-bottom"><div class="dash-support"> <b>Need a hand?</b><p>Explore guides and tips to get your website online.</p><button onclick="showDashToast('Help centre is coming soon')">Visit help centre ↗</button></div><div class="dash-user"><span class="dash-avatar">JS</span><span><b>My workspace</b><small>Free account</small></span><span class="dash-more">•••</span></div></div>
+    </aside>
+    <main class="dash-main">
+      <section class="dash-welcome">
+        <div><div class="dash-eyebrow">YOUR WEBSITE WORKSPACE</div><h1>Good afternoon 👋</h1><p>Everything you need to build and grow your online presence.</p></div>
+        <button class="dash-primary" onclick="openSiteBuilder()">＋ Create a website</button>
+      </section>
+      <section class="dash-stats">
+        <article><span class="dash-stat-icon">▣</span><div><small>Websites</small><b>2</b></div><em>In your workspace</em></article>
+        <article><span class="dash-stat-icon">↗</span><div><small>Published sites</small><b>1</b></div><em>Ready to be discovered</em></article>
+        <article><span class="dash-stat-icon">◎</span><div><small>Domains connected</small><b>0</b></div><em>Connect a custom domain</em></article>
+      </section>
+      <section class="dash-section">
+        <div class="dash-section-head"><div><h2>Your websites</h2><p>Manage, edit and publish your projects.</p></div><button class="dash-text-btn" onclick="setDashTab('websites')">View all →</button></div>
+        <div class="dash-sites">
+          <article class="dash-site-card"><div class="dash-site-preview preview-fashion"><span>THREADLY</span><b>Everyday style.<br>Everyday prices.</b><i>EXPLORE COLLECTION</i></div><div class="dash-site-info"><div><b>Threadly Store</b><small>threadly.siteforge.app</small></div><span class="dash-status published">● Published</span></div><div class="dash-site-actions"><button onclick="openSiteBuilder()">Edit website</button><button onclick="showDashToast('Site settings will be available in the next update')">Manage</button><span>⋯</span></div></article>
+          <article class="dash-site-card"><div class="dash-site-preview preview-studio"><span>STUDIO NORTH</span><b>Ideas made<br>into reality.</b><i>DISCOVER MORE</i></div><div class="dash-site-info"><div><b>Studio North</b><small>studio-north.siteforge.app</small></div><span class="dash-status draft">● Draft</span></div><div class="dash-site-actions"><button onclick="openSiteBuilder()">Continue editing</button><button onclick="showDashToast('Site settings will be available in the next update')">Manage</button><span>⋯</span></div></article>
+          <button class="dash-add-card" onclick="openSiteBuilder()"><span>＋</span><b>Create another website</b><small>Start with AI or choose a template</small></button>
+        </div>
+      </section>
+      <section class="dash-create">
+        <div><div class="dash-eyebrow">START SOMETHING NEW</div><h2>Your next idea deserves a website.</h2><p>Tell AI what you have in mind and get a polished, responsive website in minutes.</p><button class="dash-primary" onclick="openSiteBuilder()">✦ Build with AI</button></div>
+        <div class="dash-create-art"><div class="art-window"><div class="art-bar"><i></i><i></i><i></i></div><div class="art-content"><span></span><b></b><b></b><i></i><div><em></em><em></em><em></em></div></div></div><div class="art-spark">✦</div></div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<div class="app" style="display:none">
   <aside class="side">
     <div class="brand">
       <div class="logo">S</div>
@@ -475,6 +539,12 @@ $("#dlBtn").onclick=()=>{if(current<0)return;const html=versions[current].html;
   a.download=slugify(siteTitle(html))+".html";document.body.appendChild(a);a.click();a.remove();
   setTimeout(()=>URL.revokeObjectURL(a.href),4000);toast("Download started")};
 $("#fsBtn").onclick=()=>{const f=$("#fw");try{(f.requestFullscreen||f.webkitRequestFullscreen).call(f)}catch{toast("Fullscreen not allowed here")}};
+
+
+function showDashToast(message){const t=document.getElementById("toast");t.textContent=message;t.classList.add("show");clearTimeout(showDashToast._timer);showDashToast._timer=setTimeout(()=>t.classList.remove("show"),2300)}
+function openSiteBuilder(){document.getElementById("dashboard").style.display="none";document.querySelector(".app").style.display="grid";window.scrollTo(0,0)}
+function setDashTab(tab){document.querySelectorAll(".dash-nav-item").forEach(b=>b.classList.toggle("active",b.dataset.dash===tab));if(tab==="builder"){openSiteBuilder();return}if(tab==="templates"){showDashToast("Choose a site type in the builder to start with a template");openSiteBuilder();return}if(tab!=="home"&&tab!=="websites"){showDashToast(tab.charAt(0).toUpperCase()+tab.slice(1)+" management is coming soon")}else{showDashToast(tab==="home"?"You're on your workspace home":"Showing your websites")}}
+document.querySelectorAll(".dash-nav-item").forEach(b=>b.addEventListener("click",()=>setDashTab(b.dataset.dash)));
 
 </script>
 </body>
