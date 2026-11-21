@@ -68,6 +68,8 @@ label.lbl{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(-
 .act{padding:8px 13px;border-radius:9px;border:1px solid var(--line);font-size:13px;display:flex;align-items:center;gap:6px;color:var(--text);background:var(--panel2);transition:.15s}
 .act:hover{border-color:var(--accent)}
 .act:disabled{opacity:.4;cursor:not-allowed}
+.act.editing{border-color:var(--accent2);background:rgba(34,211,238,.12)}
+#frame.editing{cursor:text}
 .stage{flex:1;position:relative;min-height:0;background:
   radial-gradient(circle at 20% 10%,rgba(139,92,246,.09),transparent 40%),
   radial-gradient(circle at 90% 90%,rgba(34,211,238,.07),transparent 40%),var(--bg);
@@ -190,6 +192,8 @@ iframe{border:0;width:100%;flex:1;background:#fff}
       <button class="act" id="copyBtn" disabled>⧉ Copy HTML</button>
       <button class="act" id="dlBtn" disabled>⬇ Download</button>
       <button class="act" id="fsBtn" disabled>⛶ Fullscreen</button>
+      <button class="act" id="editBtn" disabled>✎ Edit page</button>
+      <button class="act" id="saveEditBtn" disabled>✓ Save edits</button>
     </div>
     <div class="stage" id="stage">
       <div class="empty" id="empty">
@@ -242,6 +246,7 @@ function status(m,cls=""){const s=$("#status");s.textContent=m;s.className="stat
 
 // state
 let versions=[], current=-1, busy=false, ctrl=null;
+let visualEdit=false, selectedEditElement=null;
 // Streams text from the Netlify edge function (/api/generate)
 async function sample(prompt,{signal,onText}={}){
   const r=await fetch("/api/generate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({prompt}),signal});
@@ -303,6 +308,7 @@ function slugify(s){return (s||"website").toLowerCase().replace(/[^a-z0-9]+/g,"-
 function render(html){
   $("#empty").style.display="none";$("#fw").style.display="flex";
   $("#frame").srcdoc=html;
+  $("#frame").onload=()=>{if(visualEdit)attachVisualEditor()};
   $("#codeEl").textContent=html;
   $("#url").textContent="https://"+slugify(siteTitle(html))+".com";
 }
@@ -322,6 +328,8 @@ function setBusy(b,label){
   if(b){go.textContent="■ Stop";go.classList.add("stop");rg.disabled=true;$("#buildTxt").textContent=label}
   else{go.textContent="✦ Generate website";go.classList.remove("stop");rg.disabled=false}
   ["#copyBtn","#fsBtn","#dlBtn"].forEach(s=>$(s).disabled=b||current<0);
+  $("#editBtn").disabled=b||current<0;
+  $("#saveEditBtn").disabled=b||current<0||!visualEdit;
 }
 
 async function run(input,label,note){
@@ -394,6 +402,61 @@ $("#refineGo").onclick=()=>{
 };
 $("#prompt").addEventListener("keydown",e=>{if(e.key==="Enter"&&(e.metaKey||e.ctrlKey))$("#go").click()});
 $("#refineTxt").addEventListener("keydown",e=>{if(e.key==="Enter"&&(e.metaKey||e.ctrlKey))$("#refineGo").click()});
+
+
+function attachVisualEditor(){
+  const frame=$("#frame");
+  try{
+    const doc=frame.contentDocument;
+    if(!doc||!doc.body)return;
+    doc.designMode="off";
+    if(doc.__siteForgeEditHandler)doc.removeEventListener("click",doc.__siteForgeEditHandler,true);
+    doc.__siteForgeEditHandler=function(ev){
+      if(!visualEdit)return;
+      const target=ev.target.closest("h1,h2,h3,h4,p,li,a,button,small,strong,em,span");
+      if(!target||target.closest("nav")&&target.tagName==="A"){ev.preventDefault();return}
+      ev.preventDefault();ev.stopPropagation();
+      if(selectedEditElement)selectedEditElement.style.outline="";
+      selectedEditElement=target;
+      target.style.outline="2px dashed #8b5cf6";
+      target.contentEditable="true";
+      target.focus();
+      toast("Text selected — edit it directly in the preview");
+    };
+    doc.addEventListener("click",doc.__siteForgeEditHandler,true);
+    doc.querySelectorAll("a,button,form").forEach(el=>{el.dataset.sfOriginalHref=el.getAttribute("href")||""});
+  }catch(e){status("Visual editing is unavailable for this preview.","warn")}
+}
+function toggleVisualEdit(){
+  if(current<0)return;
+  visualEdit=!visualEdit;
+  $("#editBtn").classList.toggle("editing",visualEdit);
+  $("#editBtn").textContent=visualEdit?"✕ Exit editing":"✎ Edit page";
+  $("#saveEditBtn").disabled=!visualEdit;
+  $("#frame").classList.toggle("editing",visualEdit);
+  if(visualEdit){attachVisualEditor();toast("Click text in the preview to edit it");}
+  else{
+    try{const doc=$("#frame").contentDocument;if(doc){doc.querySelectorAll("[contenteditable=true]").forEach(el=>el.removeAttribute("contenteditable"));if(selectedEditElement)selectedEditElement.style.outline="";}}catch(e){}
+    selectedEditElement=null;
+  }
+}
+function saveVisualEdits(){
+  if(current<0)return;
+  try{
+    const doc=$("#frame").contentDocument;
+    if(!doc)throw new Error("Preview not available");
+    doc.querySelectorAll("[contenteditable=true]").forEach(el=>el.removeAttribute("contenteditable"));
+    if(selectedEditElement)selectedEditElement.style.outline="";
+    const html="<!DOCTYPE html>\\n"+doc.documentElement.outerHTML;
+    versions.push({html,note:"Visual edits",time:new Date()});
+    current=versions.length-1;render(html);renderHist();visualEdit=false;
+    $("#editBtn").classList.remove("editing");$("#editBtn").textContent="✎ Edit page";
+    $("#saveEditBtn").disabled=true;$("#codeEl").textContent=html;
+    status("✓ Visual changes saved as a new version");toast("Your edits are saved");
+  }catch(e){status("Couldn't save preview edits: "+e.message,"err")}
+}
+$("#editBtn").onclick=toggleVisualEdit;
+$("#saveEditBtn").onclick=saveVisualEdits;
 
 function renderHist(){
   $("#histWrap").style.display=versions.length?"block":"none";
