@@ -4,7 +4,7 @@ Type a prompt → get a complete, responsive website with live preview, refine, 
 
 ```
 public/index.html                  the app (static)
-netlify/edge-functions/generate.js streams AI output from the Anthropic API
+netlify/edge-functions/generate.js streams AI output from the OpenAI Responses API
 netlify.toml                       publish folder = public
 ```
 
@@ -12,7 +12,9 @@ netlify.toml                       publish folder = public
 1. Push this folder to a GitHub repo.
 2. Netlify → **Add new project → Import an existing project** → pick the repo.
    Build command: *(leave empty)* · Publish directory: `public`
-3. **Site configuration → Environment variables → Add**: `ANTHROPIC_API_KEY` = your key from console.anthropic.com
+3. **Site configuration → Environment variables → Add**:
+   - Name: `OPENAI_API_KEY`
+   - Value: your API key from https://platform.openai.com/api-keys
 4. **Deploys → Trigger deploy**. Open the site and generate.
 
 ## Deploy (CLI)
@@ -20,8 +22,8 @@ netlify.toml                       publish folder = public
 npm i -g netlify-cli
 netlify login
 cd siteforge-netlify
-netlify init                 # create/link a site
-netlify env:set ANTHROPIC_API_KEY sk-ant-xxxxx
+netlify init
+netlify env:set OPENAI_API_KEY
 netlify deploy --prod
 ```
 
@@ -29,9 +31,9 @@ Local test: `netlify dev` → http://localhost:8888
 
 > Drag-and-drop deploy (app.netlify.com/drop) does **not** deploy edge functions — use Git or CLI.
 
-## Optional env vars
-- `MODEL` (default `claude-sonnet-5-5`; use `claude-haiku-5-5` for cheaper/faster)
-- `MAX_TOKENS` (default `16000`)
+## Optional environment variables
+- `OPENAI_MODEL` (default: `gpt-5-mini`; set this to another model enabled for your API project if desired)
+- `MAX_OUTPUT_TOKENS` (default: `16000`)
 
 ## Cost / abuse
-Every generation spends your API credits. Before sharing the URL publicly, set a monthly spend limit in the Anthropic Console, and consider Netlify's rate limiting or password protection.
+Each generation uses your OpenAI API credits. Set a monthly usage budget/limit in the OpenAI Platform, and consider Netlify rate limiting or password protection before sharing the URL publicly.
