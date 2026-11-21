@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SiteForge — AI Website Maker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0b12; --panel:#13131d; --panel2:#1a1a27; --line:#2a2a3c; --text:#ecebf5; --muted:#8d8ba6;
+  --accent:#8b5cf6; --accent2:#22d3ee; --ok:#34d399; --warn:#fbbf24; --err:#f87171;
+  --grad:linear-gradient(135deg,#8b5cf6,#22d3ee);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:'Space Grotesk',system-ui,sans-serif;background:var(--bg);color:var(--text);overflow:hidden}
+button{font:inherit;cursor:pointer;border:none;color:inherit;background:none}
+textarea,input,select{font:inherit;color:inherit}
+.app{display:grid;grid-template-columns:400px 1fr;height:100vh}
+/* ---------- sidebar ---------- */
+.side{background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+.brand{display:flex;align-items:center;gap:10px;padding:18px 20px;border-bottom:1px solid var(--line)}
+.logo{width:34px;height:34px;border-radius:10px;background:var(--grad);display:grid;place-items:center;font-weight:700;font-size:18px;color:#0b0b12}
+.brand h1{font-size:19px;font-weight:700;letter-spacing:-.3px}
+.brand span{font-size:12px;color:var(--muted);display:block;font-weight:400}
+.side-body{flex:1;overflow-y:auto;padding:18px 20px;display:flex;flex-direction:column;gap:18px}
+.side-body::-webkit-scrollbar{width:6px}.side-body::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
+label.lbl{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:600;display:block;margin-bottom:8px}
+.prompt{width:100%;min-height:130px;resize:vertical;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px;font-size:14.5px;line-height:1.5;outline:none;transition:border .2s}
+.prompt:focus{border-color:var(--accent)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:12.5px;padding:6px 11px;border-radius:999px;background:var(--panel2);border:1px solid var(--line);color:var(--muted);transition:.15s}
+.chip:hover{color:var(--text);border-color:var(--accent)}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.seg button{padding:9px 6px;border-radius:9px;background:var(--panel2);border:1px solid var(--line);font-size:13px;color:var(--muted);transition:.15s}
+.seg button.on{border-color:var(--accent);color:var(--text);background:rgba(139,92,246,.14)}
+.swatches{display:flex;gap:8px;flex-wrap:wrap}
+.sw{width:30px;height:30px;border-radius:50%;border:2px solid transparent;transition:.15s;position:relative}
+.sw.on{border-color:#fff;transform:scale(1.08)}
+.sw[data-c="auto"]{background:conic-gradient(#f43f5e,#f59e0b,#22c55e,#3b82f6,#a855f7,#f43f5e)}
+.go{width:100%;padding:14px;border-radius:12px;background:var(--grad);color:#0b0b12;font-weight:700;font-size:15.5px;display:flex;align-items:center;justify-content:center;gap:8px;transition:.2s}
+.go:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.go:disabled{opacity:.55;cursor:not-allowed;transform:none}
+.go.stop{background:#2a2a3c;color:var(--text)}
+.refine{display:none;flex-direction:column;gap:8px;padding:14px;border-radius:12px;background:var(--panel2);border:1px solid var(--line)}
+.refine.show{display:flex}
+.refine textarea{min-height:70px;background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:10px;font-size:13.5px;resize:vertical;outline:none}
+.refine textarea:focus{border-color:var(--accent2)}
+.refine .go{padding:10px;font-size:14px;background:linear-gradient(135deg,#22d3ee,#34d399)}
+.hist{display:flex;flex-direction:column;gap:6px}
+.hitem{display:flex;align-items:center;gap:8px;padding:9px 11px;border-radius:9px;background:var(--panel2);border:1px solid var(--line);font-size:13px;text-align:left;transition:.15s}
+.hitem:hover{border-color:var(--accent)}
+.hitem.on{border-color:var(--accent2)}
+.hitem .v{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--accent2);flex:none}
+.hitem .t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted)}
+.status{font-size:12.5px;color:var(--muted);min-height:18px}
+.status.err{color:var(--err)}.status.warn{color:var(--warn)}
+.notice{display:none;padding:12px;border-radius:10px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.35);color:#fecaca;font-size:13px;line-height:1.45}
+/* ---------- main ---------- */
+.main{display:flex;flex-direction:column;min-width:0;min-height:0}
+.bar{display:flex;align-items:center;gap:10px;padding:12px 18px;border-bottom:1px solid var(--line);background:var(--panel)}
+.tabs,.devices{display:flex;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:3px}
+.tabs button,.devices button{padding:7px 13px;border-radius:7px;font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.tabs button.on,.devices button.on{background:var(--line);color:var(--text)}
+.spacer{flex:1}
+.act{padding:8px 13px;border-radius:9px;border:1px solid var(--line);font-size:13px;display:flex;align-items:center;gap:6px;color:var(--text);background:var(--panel2);transition:.15s}
+.act:hover{border-color:var(--accent)}
+.act:disabled{opacity:.4;cursor:not-allowed}
+.stage{flex:1;position:relative;min-height:0;background:
+  radial-gradient(circle at 20% 10%,rgba(139,92,246,.09),transparent 40%),
+  radial-gradient(circle at 90% 90%,rgba(34,211,238,.07),transparent 40%),var(--bg);
+  display:flex;justify-content:center;padding:22px;overflow:auto}
+.frame-wrap{width:100%;height:100%;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5);transition:width .35s ease;display:flex;flex-direction:column;flex:none}
+.frame-wrap.tablet{width:820px}.frame-wrap.mobile{width:390px}
+.chrome{height:34px;background:#ececf1;display:flex;align-items:center;gap:6px;padding:0 12px;flex:none}
+.chrome i{width:11px;height:11px;border-radius:50%;display:block}
+.chrome .url{flex:1;margin-left:10px;height:20px;border-radius:6px;background:#fff;font-size:11px;color:#777;display:flex;align-items:center;padding:0 10px;font-family:'JetBrains Mono',monospace;overflow:hidden;white-space:nowrap}
+iframe{border:0;width:100%;flex:1;background:#fff}
+.code{display:none;position:absolute;inset:0;padding:22px}
+.code pre{height:100%;overflow:auto;background:#0e0e17;border:1px solid var(--line);border-radius:12px;padding:18px;font-family:'JetBrains Mono',monospace;font-size:12.5px;line-height:1.6;color:#c9c7e0;white-space:pre-wrap;word-break:break-word}
+.stage.codeview .frame-wrap{display:none}.stage.codeview .code{display:block}
+/* empty state */
+.empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:30px}
+.empty .orb{width:110px;height:110px;border-radius:50%;background:var(--grad);filter:blur(1px);opacity:.9;animation:pulse 4s ease-in-out infinite}
+.empty h2{font-size:30px;letter-spacing:-.8px;max-width:520px;line-height:1.15}
+.empty h2 b{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.empty p{color:var(--muted);max-width:440px;font-size:15px;line-height:1.5}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:.85}50%{transform:scale(1.08);opacity:1}}
+/* building overlay */
+.building{position:absolute;top:34px;left:22px;right:22px;display:none;justify-content:center;pointer-events:none;z-index:3}
+.building.show{display:flex}
+.pill{margin-top:14px;padding:8px 16px;border-radius:999px;background:rgba(11,11,18,.88);border:1px solid var(--line);font-size:13px;display:flex;align-items:center;gap:10px;backdrop-filter:blur(6px)}
+.spin{width:14px;height:14px;border-radius:50%;border:2px solid var(--line);border-top-color:var(--accent2);animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(30px);opacity:0;background:var(--panel2);border:1px solid var(--line);padding:10px 18px;border-radius:10px;font-size:13.5px;transition:.3s;z-index:50;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media (max-width:900px){
+  body{overflow:auto}
+  .app{grid-template-columns:1fr;height:auto}
+  .side{border-right:none;border-bottom:1px solid var(--line)}
+  .main{height:90vh}
+  .bar{flex-wrap:wrap}
+  .devices{display:none}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="brand">
+      <div class="logo">S</div>
+      <div><h1>SiteForge</h1><span>Describe it. Get a website.</span></div>
+    </div>
+    <div class="side-body">
+      <div>
+        <label class="lbl" for="prompt">What website do you want?</label>
+        <textarea id="prompt" class="prompt" placeholder="e.g. A landing page for my bakery in Coimbatore called 'Crumb & Co' — hero with a tagline, menu with prices in ₹, testimonials, opening hours, and a contact form."></textarea>
+      </div>
+      <div>
+        <label class="lbl">Try an idea</label>
+        <div class="chips" id="chips"></div>
+      </div>
+      <div>
+        <label class="lbl">Site type</label>
+        <div class="seg" id="type">
+          <button data-v="landing page" class="on">Landing</button>
+          <button data-v="business website">Business</button>
+          <button data-v="personal portfolio">Portfolio</button>
+          <button data-v="online store front">Store</button>
+          <button data-v="blog homepage">Blog</button>
+          <button data-v="event / launch page">Event</button>
+        </div>
+      </div>
+      <div>
+        <label class="lbl">Style</label>
+        <div class="seg" id="style">
+          <button data-v="modern and clean, generous whitespace" class="on">Modern</button>
+          <button data-v="bold, vibrant gradients, playful shapes">Vibrant</button>
+          <button data-v="dark mode, sleek, glowing accents">Dark</button>
+          <button data-v="minimal, editorial, serif headings">Minimal</button>
+          <button data-v="luxury, elegant, refined typography">Elegant</button>
+          <button data-v="retro, brutalist, chunky borders">Retro</button>
+        </div>
+      </div>
+      <div>
+        <label class="lbl">Accent colour</label>
+        <div class="swatches" id="colors">
+          <button class="sw on" data-c="auto" title="Let AI choose"></button>
+          <button class="sw" data-c="#6366f1" style="background:#6366f1"></button>
+          <button class="sw" data-c="#ec4899" style="background:#ec4899"></button>
+          <button class="sw" data-c="#f97316" style="background:#f97316"></button>
+          <button class="sw" data-c="#10b981" style="background:#10b981"></button>
+          <button class="sw" data-c="#0ea5e9" style="background:#0ea5e9"></button>
+          <button class="sw" data-c="#eab308" style="background:#eab308"></button>
+          <button class="sw" data-c="#111827" style="background:#111827;border-color:#444"></button>
+        </div>
+      </div>
+      <div class="notice" id="notice"></div>
+      <button class="go" id="go">✦ Generate website</button>
+      <div class="status" id="status"></div>
+
+      <div class="refine" id="refine">
+        <label class="lbl" style="margin:0">Refine this site</label>
+        <textarea id="refineTxt" placeholder="e.g. Make the hero darker, add a pricing section with 3 plans, change font to something rounder"></textarea>
+        <button class="go" id="refineGo">↻ Apply changes</button>
+      </div>
+
+      <div id="histWrap" style="display:none">
+        <label class="lbl">Versions</label>
+        <div class="hist" id="hist"></div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="bar">
+      <div class="tabs">
+        <button class="on" data-tab="preview">👁 Preview</button>
+        <button data-tab="code">&lt;/&gt; Code</button>
+      </div>
+      <div class="devices" id="devices">
+        <button class="on" data-d="desktop" title="Desktop">🖥</button>
+        <button data-d="tablet" title="Tablet">▭</button>
+        <button data-d="mobile" title="Mobile">📱</button>
+      </div>
+      <div class="spacer"></div>
+      <button class="act" id="copyBtn" disabled>⧉ Copy HTML</button>
+      <button class="act" id="dlBtn" disabled>⬇ Download</button>
+      <button class="act" id="fsBtn" disabled>⛶ Fullscreen</button>
+    </div>
+    <div class="stage" id="stage">
+      <div class="empty" id="empty">
+        <div class="orb"></div>
+        <h2>Type an idea. <b>Get a real website.</b></h2>
+        <p>Describe your business, portfolio or event on the left. SiteForge writes a complete, responsive site you can preview, refine, copy and download.</p>
+      </div>
+      <div class="frame-wrap" id="fw" style="display:none">
+        <div class="chrome"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i><div class="url" id="url">https://your-site.com</div></div>
+        <iframe id="frame" title="Website preview" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>
+      </div>
+      <div class="building" id="building"><div class="pill"><div class="spin"></div><span id="buildTxt">Designing your site…</span></div></div>
+      <div class="code"><pre id="codeEl"></pre></div>
+    </div>
+  </main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const ideas = [
+  ["☕ Café", "A cozy specialty coffee café in Bangalore called 'Bean There' — hero with a warm tagline, signature drinks menu with prices in ₹, our story, gallery of drink illustrations, location & hours, and a reservation form."],
+  ["🏋️ Gym", "A modern fitness studio 'PulseFit' — membership plans (Basic, Pro, Elite), class schedule table, trainer profiles, transformation stats, FAQ and a free-trial signup."],
+  ["👩‍💻 Portfolio", "A personal portfolio for a Senior AI Engineer — intro, skills grid (LLMs, RAG, MLOps, GCP), featured projects with tags, experience timeline, and contact section."],
+  ["🚚 Logistics", "A truck booking & logistics company in Coimbatore — instant quote form (pickup, drop, vehicle type), services (packers & movers, courier, goods transport), how it works in 3 steps, coverage area and testimonials."],
+  ["🍦 Ice cream", "A premium ice cream kiosk brand in Chennai malls — flavours grid with colourful illustrations, offers, store locator list, franchise enquiry form."],
+  ["🎓 Tutoring", "Online live tutoring for school kids in Physics, Chemistry and Maths (CBSE, ICSE, IGCSE) — hero, subjects, how classes work, pricing, mentor intro and a book-a-demo form."],
+  ["🛍️ Fashion", "A budget fashion & accessories store front 'Threadly' — new arrivals product grid with ₹ prices and add-to-cart buttons, categories, offers banner, newsletter signup."],
+  ["💍 Wedding", "A wedding invite website for Aarav & Meera — countdown timer, our story, event schedule (mehendi, sangeet, wedding), venue info and RSVP form."]
+];
+const chips = $("#chips");
+ideas.forEach(([t,p])=>{const b=document.createElement("button");b.className="chip";b.textContent=t;b.onclick=()=>{$("#prompt").value=p;$("#prompt").focus()};chips.appendChild(b)});
+
+function segGroup(id){const el=$(id);el.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;el.querySelectorAll("button").forEach(x=>x.classList.remove("on"));b.classList.add("on")});return()=>el.querySelector(".on").dataset.v}
+const getType=segGroup("#type"), getStyle=segGroup("#style");
+$("#colors").addEventListener("click",e=>{const b=e.target.closest(".sw");if(!b)return;document.querySelectorAll(".sw").forEach(x=>x.classList.remove("on"));b.classList.add("on")});
+const getColor=()=>document.querySelector(".sw.on").dataset.c;
+
+// tabs & devices
+document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll(".tabs button").forEach(x=>x.classList.remove("on"));b.classList.add("on");
+  $("#stage").classList.toggle("codeview",b.dataset.tab==="code");
+});
+$("#devices").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
+  $("#devices").querySelectorAll("button").forEach(x=>x.classList.remove("on"));b.classList.add("on");
+  const fw=$("#fw");fw.classList.remove("tablet","mobile");if(b.dataset.d!=="desktop")fw.classList.add(b.dataset.d)});
+
+function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove("show"),2200)}
+function status(m,cls=""){const s=$("#status");s.textContent=m;s.className="status "+cls}
+
+// state
+let versions=[], current=-1, busy=false, ctrl=null;
+// Streams text from the Netlify edge function (/api/generate)
+async function sample(prompt,{signal,onText}={}){
+  const r=await fetch("/api/generate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({prompt}),signal});
+  if(!r.ok){let m="Server error ("+r.status+")";try{const j=await r.json();m=j.error||m}catch{}throw{code:r.status===429?"rate_limited":"server",message:m}}
+  const rd=r.body.getReader(),dec=new TextDecoder();let text="",truncated=false;
+  for(;;){const {done,value}=await rd.read();if(done)break;text+=dec.decode(value,{stream:true});
+    const ei=text.indexOf("\u0000ERR:");if(ei>-1)throw{message:text.slice(ei+5)};
+    if(text.includes("\u0000TRUNC")){truncated=true;text=text.replace("\u0000TRUNC","")}
+    onText&&onText({text})}
+  return {text,truncated};
+}
+
+const SYSTEM = `You are SiteForge, an expert web designer and front-end developer. You build complete, production-quality, single-file websites.
+
+OUTPUT RULES (strict):
+- Reply with ONLY one complete HTML document, starting with <!DOCTYPE html> and ending with </html>. No markdown fences, no explanation.
+- All CSS in one <style> tag, all JS in one <script> tag at the end of body. You may use Google Fonts via <link> from fonts.googleapis.com. No other external resources.
+- NO external or remote images (they will not load). For visuals use inline SVG illustrations/icons, CSS gradients, shapes, emoji, and patterns. Make visuals look intentional and beautiful.
+- Fully responsive (mobile-first, works at 375px and 1440px), with a sticky nav that collapses to a working hamburger menu on mobile.
+- Use smooth scroll, tasteful hover states and subtle scroll-reveal animations (IntersectionObserver).
+- Forms must preventDefault on submit and show an inline success message (no alert()).
+- Write realistic, specific, persuasive copy for the business described — never lorem ipsum. Use the currency/locale the user implies.
+- Strong visual hierarchy, consistent spacing scale, accessible contrast, semantic HTML.
+- Keep it complete but compact: aim for roughly 350–550 lines total so it finishes. Always close every tag and end with </html>.`;
+
+function buildPrompt(p){
+  const c=getColor();
+  return `${SYSTEM}
+
+Build a ${getType()}.
+Visual style: ${getStyle()}.
+${c==="auto"?"Choose an accent colour palette that fits the brand.":`Primary accent colour: ${c} (build a harmonious palette around it).`}
+
+The user's request:
+"""${p}"""`;
+}
+function refinePrompt(html,instr){
+  return `${SYSTEM}
+
+Here is the current website:
+<current_site>
+${html}
+</current_site>
+
+Apply this change request, keeping everything else intact and polished:
+"""${instr}"""
+
+Return the FULL updated HTML document.`;
+}
+function extractHTML(t){
+  t=t.replace(/^\s*```(?:html)?\s*/i,"").replace(/```\s*$/,"");
+  const i=t.search(/<!DOCTYPE html|<html/i); if(i>0)t=t.slice(i);
+  const j=t.toLowerCase().lastIndexOf("</html>"); if(j>-1)t=t.slice(0,j+7);
+  return t.trim();
+}
+function siteTitle(html){const m=html.match(/<title>([^<]*)<\/title>/i);return m?m[1].trim():"Untitled site"}
+function slugify(s){return (s||"website").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,40)||"website"}
+
+function render(html){
+  $("#empty").style.display="none";$("#fw").style.display="flex";
+  $("#frame").srcdoc=html;
+  $("#codeEl").textContent=html;
+  $("#url").textContent="https://"+slugify(siteTitle(html))+".com";
+}
+let lastPaint=0;
+function livePaint(html,force){
+  const now=Date.now();
+  $("#codeEl").textContent=html;
+  if(force||now-lastPaint>1400){lastPaint=now;
+    if(/<body/i.test(html)){$("#empty").style.display="none";$("#fw").style.display="flex";$("#frame").srcdoc=html+"</body></html>"}}
+  const pre=$("#codeEl");pre.scrollTop=pre.scrollHeight;
+}
+
+function setBusy(b,label){
+  busy=b;
+  $("#building").classList.toggle("show",b);
+  const go=$("#go"), rg=$("#refineGo");
+  if(b){go.textContent="■ Stop";go.classList.add("stop");rg.disabled=true;$("#buildTxt").textContent=label}
+  else{go.textContent="✦ Generate website";go.classList.remove("stop");rg.disabled=false}
+  ["#copyBtn","#fsBtn","#dlBtn"].forEach(s=>$(s).disabled=b||current<0);
+}
+
+async function run(input,label,note){
+  ctrl=new AbortController();setBusy(true,label);status("Writing code…");
+  const phases=["Sketching layout…","Choosing typography…","Writing copy…","Styling sections…","Adding interactions…","Polishing details…"];
+  let pi=0;const pt=setInterval(()=>{$("#buildTxt").textContent=phases[pi++%phases.length]},2600);
+  try{
+    const res=await sample(input,{signal:ctrl.signal,
+      onText:({text})=>{const h=extractHTML(text);if(h)livePaint(h);status(`Writing code… ${Math.round(text.length/1000)}k chars`)}});
+    const html=extractHTML(res.text);
+    if(!/<html|<body|<div/i.test(html))throw{message:"The response didn't contain a website. Try rephrasing."};
+    versions.push({html,note,time:new Date()});current=versions.length-1;
+    render(html);renderHist();$("#refine").classList.add("show");
+    if(res.truncated||!/<\/html>/i.test(html))status("Site was cut off at the end — try 'Refine' with \"finish the remaining sections\".","warn");
+    else status(`✓ Built "${siteTitle(html)}" — ${html.split("\n").length} lines`);
+    toast("Website ready ✨");
+  }catch(e){
+    if(e&&e.name==="AbortError"||ctrl.signal.aborted){status("Stopped.");if(current>=0)render(versions[current].html)}
+    else if(e&&e.code==="not_granted"){status("Permission to ask Claude was declined.","err")}
+    else if(e&&e.code==="rate_limited"){status("Too many requests — wait a minute and try again.","warn")}
+    else{status((e&&e.message)||"Something went wrong.","err");if(current>=0)render(versions[current].html)}
+  }finally{clearInterval(pt);setBusy(false)}
+}
+
+$("#go").onclick=()=>{
+  if(busy){ctrl&&ctrl.abort();return}
+  const p=$("#prompt").value.trim();
+  if(!p){status("Describe the website you want first.","warn");$("#prompt").focus();return}
+  run(buildPrompt(p),"Designing your site…",p);
+};
+$("#refineGo").onclick=()=>{
+  if(busy||current<0)return;
+  const r=$("#refineTxt").value.trim();if(!r){status("Describe what to change.","warn");return}
+  run(refinePrompt(versions[current].html,r),"Applying your changes…","↻ "+r).then(()=>{$("#refineTxt").value=""});
+};
+$("#prompt").addEventListener("keydown",e=>{if(e.key==="Enter"&&(e.metaKey||e.ctrlKey))$("#go").click()});
+$("#refineTxt").addEventListener("keydown",e=>{if(e.key==="Enter"&&(e.metaKey||e.ctrlKey))$("#refineGo").click()});
+
+function renderHist(){
+  $("#histWrap").style.display=versions.length?"block":"none";
+  const h=$("#hist");h.innerHTML="";
+  versions.slice().reverse().forEach((v,ri)=>{const i=versions.length-1-ri;
+    const b=document.createElement("button");b.className="hitem"+(i===current?" on":"");
+    b.innerHTML=`<span class="v">v${i+1}</span><span class="t"></span>`;b.querySelector(".t").textContent=v.note;
+    b.onclick=()=>{if(busy)return;current=i;render(v.html);renderHist();setBusy(false)};h.appendChild(b)});
+}
+
+$("#copyBtn").onclick=async()=>{if(current<0)return;try{await navigator.clipboard.writeText(versions[current].html);toast("HTML copied — paste into a .html file")}catch{
+  $("#stage").classList.add("codeview");document.querySelectorAll(".tabs button").forEach(x=>x.classList.toggle("on",x.dataset.tab==="code"));
+  const r=document.createRange();r.selectNodeContents($("#codeEl"));const s=getSelection();s.removeAllRanges();s.addRange(r);toast("Selected — press Ctrl/Cmd+C")}};
+$("#dlBtn").onclick=()=>{if(current<0)return;const html=versions[current].html;
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([html],{type:"text/html"}));
+  a.download=slugify(siteTitle(html))+".html";document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),4000);toast("Download started")};
+$("#fsBtn").onclick=()=>{const f=$("#fw");try{(f.requestFullscreen||f.webkitRequestFullscreen).call(f)}catch{toast("Fullscreen not allowed here")}};
+
+</script>
+</body>
+</html>
