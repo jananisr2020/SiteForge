@@ -1,12 +1,12 @@
 // SiteForge — Netlify Edge Function
-// Proxies prompts to the Anthropic API and streams plain text back to the browser.
-// Edge Functions keep streaming after the first byte, so long generations don't time out.
+// Proxies website-generation prompts to the OpenAI Responses API and streams plain text.
+// Keep the API key on the server; never expose it in public/index.html.
 //
-// Required env var (Netlify → Site configuration → Environment variables):
-//   ANTHROPIC_API_KEY   your key from console.anthropic.com
+// Required Netlify environment variable:
+//   OPENAI_API_KEY
 // Optional:
-//   MODEL               defaults to claude-sonnet-5-5
-//   MAX_TOKENS          defaults to 16000
+//   OPENAI_MODEL          defaults to gpt-5-mini
+//   MAX_OUTPUT_TOKENS     defaults to 16000
 
 const MAX_PROMPT_CHARS = 120_000;
 
@@ -15,9 +15,11 @@ export default async (request) => {
     return json({ error: "Use POST" }, 405);
   }
 
-  const apiKey = Netlify.env.get("ANTHROPIC_API_KEY");
+  const apiKey = Netlify.env.get("OPENAI_API_KEY");
   if (!apiKey) {
-    return json({ error: "Server is missing ANTHROPIC_API_KEY. Add it in Netlify → Environment variables, then redeploy." }, 500);
+    return json({
+      error: "Server is missing OPENAI_API_KEY. Add it in Netlify → Environment variables, then redeploy."
+    }, 500);
   }
 
   let prompt;
@@ -26,6 +28,7 @@ export default async (request) => {
   } catch {
     return json({ error: "Invalid JSON body" }, 400);
   }
+
   if (typeof prompt !== "string" || !prompt.trim()) {
     return json({ error: "Prompt is required" }, 400);
   }
@@ -33,63 +36,87 @@ export default async (request) => {
     return json({ error: "Prompt is too long" }, 413);
   }
 
-  const upstream = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-      "content-type": "application/json",
-    },
-    body: JSON.stringify({
-      model: Netlify.env.get("MODEL") || "claude-sonnet-5-5",
-      max_tokens: Number(Netlify.env.get("MAX_TOKENS")) || 16000,
-      stream: true,
-      messages: [{ role: "user", content: prompt }],
-    }),
-  });
-
-  if (!upstream.ok || !upstream.body) {
-    let msg = `AI provider error (${upstream.status})`;
-    try {
-      const j = await upstream.json();
-      if (j?.error?.message) msg = j.error.message;
-    } catch {}
-    return json({ error: msg }, upstream.status === 429 ? 429 : 502);
+  let upstream;
+  try {
+    upstream = await fetch("https://api.openai.com/v1/responses", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: Netlify.env.get("OPENAI_MODEL") || "gpt-5-mini",
+        input: prompt,
+        max_output_tokens: Number(Netlify.env.get("MAX_OUTPUT_TOKENS")) || 16000,
+        stream: true,
+      }),
+      signal: request.signal,
+    });
+  } catch (error) {
+    if (error?.name === "AbortError") throw error;
+    return json({ error: error?.message || "Could not connect to OpenAI." }, 502);
   }
 
-  // Convert Anthropic SSE events into a plain text stream.
-  const enc = new TextEncoder();
-  const dec = new TextDecoder();
+  if (!upstream.ok || !upstream.body) {
+    let message = `OpenAI API error (${upstream.status})`;
+    try {
+      const payload = await upstream.json();
+      if (payload?.error?.message) message = payload.error.message;
+    } catch {}
+    return json({ error: message }, upstream.status === 429 ? 429 : 502);
+  }
+
+  // Convert OpenAI Responses API SSE events into the plain-text stream
+  // expected by public/index.html. Preserve the existing sentinel protocol.
+  const encoder = new TextEncoder();
+  const decoder = new TextDecoder();
   const reader = upstream.body.getReader();
 
   const stream = new ReadableStream({
     async start(controller) {
-      let buf = "";
+      let buffer = "";
       try {
         for (;;) {
           const { done, value } = await reader.read();
           if (done) break;
-          buf += dec.decode(value, { stream: true });
-          let nl;
-          while ((nl = buf.indexOf("\n")) > -1) {
-            const line = buf.slice(0, nl).trim();
-            buf = buf.slice(nl + 1);
+
+          buffer += decoder.decode(value, { stream: true });
+          let newline;
+          while ((newline = buffer.indexOf("\n")) !== -1) {
+            const line = buffer.slice(0, newline).trim();
+            buffer = buffer.slice(newline + 1);
             if (!line.startsWith("data:")) continue;
-            let evt;
-            try { evt = JSON.parse(line.slice(5)); } catch { continue; }
-            if (evt.type === "content_block_delta" && evt.delta?.type === "text_delta") {
-              controller.enqueue(enc.encode(evt.delta.text));
-            } else if (evt.type === "message_delta" && evt.delta?.stop_reason === "max_tokens") {
-              controller.enqueue(enc.encode("\u0000TRUNC"));
-            } else if (evt.type === "error") {
-              controller.enqueue(enc.encode("\u0000ERR:" + (evt.error?.message || "Generation failed")));
+
+            const data = line.slice(5).trim();
+            if (!data || data === "[DONE]") continue;
+
+            let event;
+            try {
+              event = JSON.parse(data);
+            } catch {
+              continue;
+            }
+
+            if (event.type === "response.output_text.delta" && event.delta) {
+              controller.enqueue(encoder.encode(event.delta));
+            } else if (event.type === "response.incomplete") {
+              const reason = event.response?.incomplete_details?.reason;
+              if (reason === "max_output_tokens") {
+                controller.enqueue(encoder.encode("\u0000TRUNC"));
+              }
+            } else if (event.type === "error" || event.type === "response.failed") {
+              const message = event.message || event.error?.message ||
+                event.response?.error?.message || "OpenAI generation failed";
+              controller.enqueue(encoder.encode("\u0000ERR:" + message));
             }
           }
         }
-      } catch (e) {
-        controller.enqueue(enc.encode("\u0000ERR:" + (e?.message || "Stream interrupted")));
+      } catch (error) {
+        if (error?.name !== "AbortError") {
+          controller.enqueue(encoder.encode("\u0000ERR:" + (error?.message || "Stream interrupted")));
+        }
       } finally {
-        controller.close();
+        try { controller.close(); } catch {}
       }
     },
     cancel() {
@@ -99,9 +126,9 @@ export default async (request) => {
 
   return new Response(stream, {
     headers: {
-      "content-type": "text/plain; charset=utf-8",
-      "cache-control": "no-store",
-      "x-content-type-options": "nosniff",
+      "Content-Type": "text/plain; charset=utf-8",
+      "Cache-Control": "no-store",
+      "X-Content-Type-Options": "nosniff",
     },
   });
 };
@@ -109,7 +136,7 @@ export default async (request) => {
 function json(obj, status = 200) {
   return new Response(JSON.stringify(obj), {
     status,
-    headers: { "content-type": "application/json" },
+    headers: { "Content-Type": "application/json" },
   });
 }
 
