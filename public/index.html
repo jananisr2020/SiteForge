@@ -42,6 +42,7 @@ label.lbl{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(-
 .go{width:100%;padding:14px;border-radius:12px;background:var(--grad);color:#0b0b12;font-weight:700;font-size:15.5px;display:flex;align-items:center;justify-content:center;gap:8px;transition:.2s}
 .go:hover{filter:brightness(1.1);transform:translateY(-1px)}
 .go:disabled{opacity:.55;cursor:not-allowed;transform:none}
+.template-go{width:100%;padding:11px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);color:var(--text);font-weight:600;font-size:14px;transition:.2s}.template-go:hover{border-color:var(--accent2);background:rgba(34,211,238,.08)}
 .go.stop{background:#2a2a3c;color:var(--text)}
 .refine{display:none;flex-direction:column;gap:8px;padding:14px;border-radius:12px;background:var(--panel2);border:1px solid var(--line)}
 .refine.show{display:flex}
@@ -158,6 +159,7 @@ iframe{border:0;width:100%;flex:1;background:#fff}
       </div>
       <div class="notice" id="notice"></div>
       <button class="go" id="go">✦ Generate website</button>
+      <button class="template-go" id="templateGo">▦ Use a built-in template — no AI/API needed</button>
       <div class="status" id="status"></div>
 
       <div class="refine" id="refine">
@@ -343,6 +345,41 @@ async function run(input,label,note){
     else{status((e&&e.message)||"Something went wrong.","err");if(current>=0)render(versions[current].html)}
   }finally{clearInterval(pt);setBusy(false)}
 }
+
+
+function escapeHTML(value){
+  return String(value).replace(/[&<>"']/g,function(ch){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]});
+}
+function makeBuiltInTemplate(prompt){
+  const type=getType(), accent=getColor()==="auto"?"#8b5cf6":getColor();
+  const match=prompt.match(/(?:called|named|brand name is)\s+["']?([^"'—,.]+)["']?/i);
+  const fallback={"landing page":"Your Next Big Idea","business website":"Your Business","personal portfolio":"Your Name","online store front":"The Good Store","blog homepage":"The Journal","event / launch page":"The Big Day"};
+  const brand=(match&&match[1]?match[1].trim():fallback[type]||"Your Brand").slice(0,48);
+  const catalog={
+    "landing page":["MAKE SOMETHING GREAT","A better way to bring your next idea to life.","A clear, confident landing page built to turn curious visitors into your next customers.",["Built around you","A focused experience shaped around what matters most.","Simple by design","Clear information, thoughtful details and no unnecessary friction.","Ready to grow","A flexible starting point you can adapt as your idea evolves."],"Let's get started"],
+    "business website":["WELCOME — WE'RE GLAD YOU'RE HERE","Good work. Great people. A business built around you.","We combine thoughtful service, practical expertise and a personal approach to deliver work you can count on.",["What we do","Explore our services and find the right support for your needs.","How we work","A straightforward process, clear communication and dependable delivery.","Why choose us","Real attention to detail and a team that cares about the outcome."],"Talk to our team"],
+    "personal portfolio":["DESIGNER · DEVELOPER · CREATOR","I turn thoughtful ideas into meaningful work.","A selection of projects, skills and experiences — and a little about the person behind them.",["Selected work","A few projects that show how I think, build and solve problems.","What I do","A mix of creative thinking, technical craft and practical execution.","Experience","The teams, challenges and lessons that have shaped my journey."],"Let's connect"],
+    "online store front":["A LITTLE SOMETHING SPECIAL","Find your new everyday favourites.","Thoughtfully selected essentials, easy browsing and pieces you'll be happy to bring home.",["New arrivals","Discover the latest additions to the collection.","Customer favourites","Popular picks loved for their style, quality and value.","Made for everyday","Useful, versatile finds for the moments that make up your day."],"Explore the collection"],
+    "blog homepage":["IDEAS · STORIES · PERSPECTIVES","Fresh thoughts for curious minds.","Notes, guides and stories worth spending a few minutes with. Pull up a chair and explore.",["The latest","New perspectives and updates from our editors.","Guides & how-tos","Practical ideas you can take away and put to use.","Stories","Deeper dives, conversations and things we've learned."],"Read the latest"],
+    "event / launch page":["SAVE THE DATE","Something worth celebrating is coming.","Join us for a memorable experience. Get the details, meet the people and be part of the moment.",["The experience","A thoughtful programme with moments to connect and celebrate.","The details","Everything you need to know about the date, place and schedule.","Be part of it","Register your interest and we'll keep you in the loop."],"Register now"]
+  };
+  const d=catalog[type]||catalog["landing page"], safeBrand=escapeHTML(brand);
+  let cards="";
+  for(let i=0;i<3;i++){cards+='<article class="card"><span class="number">0'+(i+1)+'</span><h3>'+escapeHTML(d[3][i*2])+'</h3><p>'+escapeHTML(d[3][i*2+1])+'</p></article>'}
+  const year=new Date().getFullYear();
+  return '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+safeBrand+'</title><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet"><style>'+
+  ':root{--accent:'+accent+';--ink:#17202b;--muted:#667085;--paper:#f7f8fb;--line:#e7eaf0}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;font-family:"DM Sans",sans-serif;color:var(--ink);background:var(--paper)}a{color:inherit;text-decoration:none}.nav{height:76px;display:flex;align-items:center;justify-content:space-between;padding:0 7vw;background:#fff;border-bottom:1px solid var(--line)}.logo{font-family:Manrope,sans-serif;font-weight:800;font-size:21px}.logo b{color:var(--accent)}.links{display:flex;gap:28px;color:#5d6674;font-size:14px}.navbtn,.btn{display:inline-flex;padding:12px 19px;border-radius:9px;background:var(--accent);color:white;font-weight:700;font-size:14px}.hero{padding:100px 8vw 92px;background:radial-gradient(circle at 85% 15%,color-mix(in srgb,var(--accent) 15%,transparent),transparent 32%),linear-gradient(135deg,#fff,#f3f5fa)}.wrap{max-width:1120px;margin:auto}.tag{font-size:11px;letter-spacing:2px;font-weight:800;color:var(--accent)}h1,h2,h3{font-family:Manrope,sans-serif}h1{font-size:clamp(42px,6vw,76px);line-height:1.04;letter-spacing:-3px;max-width:820px;margin:20px 0}.hero p{font-size:18px;line-height:1.75;color:var(--muted);max-width:620px}.hero .btn{margin-top:20px;padding:15px 23px}.section{padding:82px 8vw}.sectionhead{max-width:620px;margin-bottom:34px}.sectionhead h2{font-size:clamp(30px,4vw,44px);letter-spacing:-1.5px;margin:12px 0}.sectionhead p,.card p{color:var(--muted);line-height:1.7}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.card{background:white;border:1px solid var(--line);border-radius:17px;padding:28px;min-height:220px;box-shadow:0 10px 35px rgba(25,35,55,.04)}.number{display:inline-grid;place-items:center;width:36px;height:36px;border-radius:10px;background:color-mix(in srgb,var(--accent) 12%,white);color:var(--accent);font-weight:800;font-size:12px}.card h3{font-size:20px;margin:22px 0 8px}.banner{background:#182230;color:white;border-radius:22px;padding:48px;display:flex;align-items:center;justify-content:space-between;gap:24px}.banner h2{font-size:clamp(27px,4vw,40px);margin:0 0 10px}.banner p{color:#c2cad5;line-height:1.6;max-width:560px}.footer{padding:30px 8vw;color:#7b8492;font-size:13px;border-top:1px solid var(--line);background:white;display:flex;justify-content:space-between;gap:18px}@media(max-width:700px){.links{display:none}.nav{height:66px}.hero{padding:75px 7vw}.grid{grid-template-columns:1fr}.section{padding:62px 7vw}.banner{padding:30px;display:block}.banner .btn{margin-top:10px}.footer{display:block;line-height:2}}'+
+  '</style></head><body><header class="nav"><a class="logo" href="#">'+safeBrand+'<b>.</b></a><nav class="links"><a href="#about">About</a><a href="#work">Explore</a><a href="#contact">Contact</a></nav><a class="navbtn" href="#contact">Get in touch</a></header><main><section class="hero"><div class="wrap"><div class="tag">'+escapeHTML(d[0])+'</div><h1>'+escapeHTML(d[1])+'</h1><p>'+escapeHTML(d[2])+'</p><a class="btn" href="#contact">'+escapeHTML(d[4])+' →</a></div></section><section class="section" id="about"><div class="wrap"><div class="sectionhead"><div class="tag">A THOUGHTFUL APPROACH</div><h2>Everything you need, thoughtfully brought together.</h2><p>Explore what makes '+safeBrand+' different and find the right next step for you.</p></div><div class="grid" id="work">'+cards+'</div></div></section><section class="section" id="contact"><div class="wrap"><div class="banner"><div><div class="tag" style="color:#b8a7ff">YOUR NEXT STEP</div><h2>Let’s make something happen.</h2><p>Have a question or an idea? Send us a note and we’ll be happy to hear from you.</p></div><a class="btn" href="mailto:hello@example.com">Say hello →</a></div></div></section></main><footer class="footer"><span>© '+year+' '+safeBrand+'. All rights reserved.</span><span>Built with SiteForge · Starter template</span></footer></body></html>';
+}
+$("#templateGo").onclick=()=>{
+  if(busy)return;
+  const prompt=$("#prompt").value.trim();
+  if(!prompt){status("Add a short description or business name first.","warn");$("#prompt").focus();return}
+  const html=makeBuiltInTemplate(prompt);
+  versions.push({html:html,note:"Built-in "+getType()+" template",time:new Date()});current=versions.length-1;
+  render(html);renderHist();$("#refine").classList.remove("show");
+  status("✓ Built from a local template — no API call needed");toast("Template website ready ✨");
+};
 
 $("#go").onclick=()=>{
   if(busy){ctrl&&ctrl.abort();return}
