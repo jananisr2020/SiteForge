@@ -338,7 +338,7 @@ async function run(input,label,note){
     toast("Website ready ✨");
   }catch(e){
     if(e&&e.name==="AbortError"||ctrl.signal.aborted){status("Stopped.");if(current>=0)render(versions[current].html)}
-    else if(e&&e.code==="not_granted"){status("Permission to ask Claude was declined.","err")}
+    else if(e&&e.code==="not_granted"){status("Permission to use the AI service was declined.","err")}
     else if(e&&e.code==="rate_limited"){status("Too many requests — wait a minute and try again.","warn")}
     else{status((e&&e.message)||"Something went wrong.","err");if(current>=0)render(versions[current].html)}
   }finally{clearInterval(pt);setBusy(false)}
